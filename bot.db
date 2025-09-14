@@ -1,0 +1,29 @@
+-- 1. Таблица игр: по одной записи на каждую синхронизированную партию
+CREATE TABLE IF NOT EXISTS games (
+  game_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  chat_id     INTEGER       NOT NULL,
+  pgn         TEXT          NOT NULL,
+  synced_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Таблица оценок: по одной записи на каждый ход в каждой партии
+CREATE TABLE IF NOT EXISTS evaluations (
+  eval_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  game_id     INTEGER       NOT NULL,
+  move_index  INTEGER       NOT NULL,
+  fen_before  TEXT          NOT NULL,
+  eval_cp     INTEGER       NOT NULL,
+  FOREIGN KEY (game_id) REFERENCES games(game_id)
+);
+
+-- 3. Таблица «задач» (промахов): каждый промах привязан к игре и ходу, с типом ошибки
+CREATE TABLE IF NOT EXISTS tasks (
+  task_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  game_id       INTEGER       NOT NULL,
+  move_index    INTEGER       NOT NULL,
+  fen_before    TEXT          NOT NULL,
+  fen_after     TEXT          NOT NULL,
+  error_type    TEXT          NOT NULL,  -- e.g. "missed_mate", "material_loss", "missed_fork"
+  detected_at   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (game_id) REFERENCES games(game_id)
+);
