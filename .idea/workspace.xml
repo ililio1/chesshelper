@@ -5,9 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a557d2d3-fc77-4a0c-a2e0-c699de6fd4c9" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/schema.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot.db" beforeDir="false" afterPath="$PROJECT_DIR$/bot.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot.db" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chessdata/lichess/ililio.pgn" beforeDir="false" afterPath="$PROJECT_DIR$/chessdata/lichess/ililio.pgn" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/connection.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/loadgames.py" beforeDir="false" afterPath="$PROJECT_DIR$/loadgames.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/stockfishanalyse.py" beforeDir="false" afterPath="$PROJECT_DIR$/stockfishanalyse.py" afterDir="false" />
@@ -40,6 +42,7 @@
   "keyToString": {
     "Python.bot.executor": "Run",
     "Python.connection.executor": "Run",
+    "Python.loadgames.executor": "Run",
     "Python.stockfishanalyse.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -64,6 +67,9 @@
       <updated>1757850226085</updated>
     </task>
     <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.db" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

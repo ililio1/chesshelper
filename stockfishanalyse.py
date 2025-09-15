@@ -1,12 +1,7 @@
-import loadgames
 import chess
 import chess.engine
 import chess.pgn
 import io
-
-gamemas = loadgames.getlastchesscomgames('ililiothebest', 100, 30)
-b = loadgames.getlastlichessgames('ililio', 100, 30)
-gamemas.extend(b)
 
 ENGINE_PATH = "D:\\ChessHelper\\stockfish\\stockfish-windows-x86-64-avx2.exe"
 
@@ -56,5 +51,3 @@ def findmove(evaluations):
             print(i)
 
     return blunders
-
-print(findmove(geteval(gamemas[1])))

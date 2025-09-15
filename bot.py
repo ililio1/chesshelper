@@ -4,11 +4,24 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
+from loadgames import getlastlichessgames, getlastchesscomgames
+from stockfishanalyse import findmove, geteval
+
+from connection import (
+    init_db, upsert_user, get_user_nicks,
+    save_game, load_games, save_blunders, load_blunders,
+    get_fen_at_move
+)
+
 logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = '8449137700:AAEaGnBplBuYKlBcoQtn-TltQJ5dZomDxNk'
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+init_db()
+
+pending_binding: dict[int, str] = {}
 
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
@@ -37,13 +50,14 @@ analysis_kb = ReplyKeyboardMarkup(
 
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
-    await message.answer("Привет:",reply_markup=main_kb)
+    await message.answer("Добро пожаловать в ChessHelper! Здесь вы можете анализировать свои партии. Для начала работы привяжите свой аккаунт lichess и/или chess.com в разделе профиль",reply_markup=main_kb)
 
-@dp.message(F.text == "Профиль")
+@dp.message(F.text == "Профиль👤")
 async def open_profile(message: Message):
-    await message.answer("Раздел «Профиль». Выберите действие:",reply_markup=profile_kb)
+    lichess_nick, chesscom_nick = get_user_nicks(message.chat.id)
+    await message.answer(f"Пользователь: {message.chat.id}\n Профиль lichess: {lichess_nick}\n Профиль chess.com: {chesscom_nick}",reply_markup=profile_kb)
 
-@dp.message(F.text == "Анализ игр")
+@dp.message(F.text == "Анализ игр🔍")
 async def open_analysis(message: Message):
     await message.answer("Раздел «Анализ игр». Выберите действие:",reply_markup=analysis_kb)
 
@@ -58,28 +72,54 @@ async def help_command(message: Message):
     await message.answer(text, reply_markup=main_kb)
 
 @dp.message(F.text == "Привязать Lichess")
-async def bind_lichess(message: Message):
-    await message.answer("Введите ваш ник на Lichess:", reply_markup=profile_kb)
+async def on_bind_lichess(message: Message):
+    pending_binding[message.chat.id] = "lichess"
+    await message.answer("Введите ваш никнейм на Lichess:", reply_markup=profile_kb)
 
 @dp.message(F.text == "Привязать Chess.com")
-async def bind_chesscom(message: Message):
-    await message.answer("Введите ваш ник на Chess.com:", reply_markup=profile_kb)
+async def on_bind_chesscom(message: Message):
+    pending_binding[message.chat.id] = "chesscom"
+    await message.answer("Введите ваш никнейм на Chess.com:", reply_markup=profile_kb)
+
+@dp.message(lambda msg: msg.chat.id in pending_binding and pending_binding[msg.chat.id] == "lichess")
+async def bind_lichess_nick(message: Message):
+    nick = message.text.strip()
+    upsert_user(message.chat.id, lichess=nick)
+    pending_binding.pop(message.chat.id, None)
+    await message.answer(f"Lichess успешно привязан: {nick}", reply_markup=profile_kb)
+
+@dp.message(lambda msg: msg.chat.id in pending_binding and pending_binding[msg.chat.id] == "chesscom")
+async def bind_chesscom_nick(message: Message):
+    nick = message.text.strip()
+    upsert_user(message.chat.id, chesscom=nick)
+    pending_binding.pop(message.chat.id, None)
+    await message.answer(f"Chess.com успешно привязан: {nick}", reply_markup=profile_kb)
 
 @dp.message(F.text == "Синхронизировать игры")
 async def sync_games(message: Message):
-    await message.answer("Загружаю ваши партии…", reply_markup=analysis_kb)
-    # сюда вставьте вашу логику geteval + сохранение в БД
+    chat_id = message.chat.id
+    lichess_nick, chesscom_nick = get_user_nicks(chat_id)
+    if not (lichess_nick or chesscom_nick):
+        return await message.answer("Для синхронизации игр необходимо привязать хотя бы один профиль", reply_markup=analysis_kb)
+    await message.answer("Загружаю ваши партии", reply_markup=analysis_kb)
+    pgn_list = list()
+    if lichess_nick:
+        pgn_list += getlastlichessgames(lichess_nick, max_games=30, period=7)
+    if chesscom_nick:
+        pgn_list += getlastchesscomgames(chesscom_nick, max_games=30, period=7)
+    await message.answer("Партии загружены", reply_markup=analysis_kb)
+
+
+
 
 @dp.message(F.text == "Мои ошибки")
 async def show_errors(message: Message):
-    await message.answer("Генерирую задачи по вашим ошибкам…", reply_markup=analysis_kb)
-    # сюда выборку из БД и отправку задач
+    await message.answer("Генерирую задачи по вашим ошибкам...", reply_markup=analysis_kb)
 
 @dp.message(F.text == "Назад")
 async def go_back(message: Message):
     await message.answer("Вы вернулись в главное меню.", reply_markup=main_kb)
 
-# Ловим всё, что не подошло под фильтры
 @dp.message()
 async def fallback(message: Message):
     await message.answer(

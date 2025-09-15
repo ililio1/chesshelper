@@ -20,40 +20,60 @@ def getlastlichessgames(username,max_games,period):
     with open(f'D:\\ChessHelper\\chessdata\\lichess\\{username}.pgn', encoding='UTF-8') as file:
         text = file.read()
 
+    if text.strip() == '':
+        return list()
+
     gameslist = list()
     numofgames = text.count('[Event')
-    for i in range(numofgames - 1):
+    for v in range(numofgames - 1):
         gameslist.append(text[:text.find('[Event',1)].strip())
         text = text[text.find('[Event',1):]
     gameslist.append(text.strip())
     return gameslist
 
-def getlastchesscomgames(username,max_games,period):
-    time_now = datetime.datetime.now(datetime.UTC)
-    time_prev = time_now - datetime.timedelta(days=period)
-    fmt_mon_now  = time_now.strftime('%m')
-    fmt_mon_prev = time_prev.strftime('%m')
-    headers = {'User-Agent': 'MyChessBot/1.0 (+https://t.me/@Justachessbot)'}
+def getlastchesscomgames(username, max_games, period):
+    now = datetime.datetime.now(datetime.timezone.utc)
+    start = now - datetime.timedelta(days=period)
+    start_ts = start.timestamp()
+    end_ts = now.timestamp()
 
-    url_now = f"https://api.chess.com/pub/player/{username}/games/{time_now.year}/{fmt_mon_now}"
-    url_prev = f"https://api.chess.com/pub/player/{username}/games/{time_prev.year}/{fmt_mon_prev}"
-    urls = [url_now]
-    if time_now.month != time_prev.month:
-        urls.append(url_prev)
-    data = {'games': []}
+    months = []
+    y, m = start.year, start.month
+    while (y, m) <= (now.year, now.month):
+        months.append((y, f"{m:02d}"))
+        if m == 12:
+            y, m = y + 1, 1
+        else:
+            m += 1
 
-    for url in urls:
+    headers = {"User-Agent": "MyChessBot/1.0 (+https://t.me/@Justachessbot)"}
+    all_games = []
+
+    for year, mon in months:
+        url = f"https://api.chess.com/pub/player/{username}/games/{year}/{mon}"
         try:
-            resp = requests.get(url, headers=headers).json()
+            resp = requests.get(url, headers=headers)
+            resp.raise_for_status()
+            payload = resp.json()
         except requests.RequestException as e:
-            print(f"Ошибка при запросе архива: {e}")
+            print(f"[Chess.com] Ошибка при запросе {url}: {e}")
             continue
-        data['games'] += resp.get('games', [])
 
-    gamelist = list()
+        for game in payload.get("games", []):
+            end_time = game.get("end_time")
+            if not isinstance(end_time, int):
+                continue
 
-    for game in data.get('games', [])[:max_games]:
-        pgn = game.get('pgn', '')
-        gamelist.append(pgn)
+            if start_ts <= end_time <= end_ts:
+                all_games.append(game)
 
-    return gamelist
+    if not all_games:
+        return list()
+
+    sorted_games = sorted(all_games, key=lambda g: g["end_time"], reverse=True)
+    selected = sorted_games[:max_games]
+
+    return [g.get("pgn", "") for g in selected]
+
+for i in getlastchesscomgames('andrushaloves', 30, 30):
+    print(i)
