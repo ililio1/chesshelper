@@ -74,6 +74,3 @@ def getlastchesscomgames(username, max_games, period):
     selected = sorted_games[:max_games]
 
     return [g.get("pgn", "") for g in selected]
-
-for i in getlastchesscomgames('andrushaloves', 30, 30):
-    print(i)

@@ -41,16 +41,22 @@ def get_user_nicks(chat_id: int) -> tuple[str, str]:
         return None, None
     return row["lichess_nick"], row["chesscom_nick"]
 
-def save_game(chat_id: int, source: str, pgn: str) -> int:
+def save_game(chat_id: int, source: str, pgn: str) -> tuple[int, bool]:
+
     conn = get_connection()
     with conn:
         cur = conn.execute(
-            "INSERT INTO games(chat_id, source, pgn) VALUES(?, ?, ?)",
+            "INSERT OR IGNORE INTO games(chat_id, source, pgn) VALUES(?,?,?)",
             (chat_id, source, pgn)
         )
-        game_id = cur.lastrowid
-    conn.close()
-    return game_id
+        if cur.rowcount:  # ряд вставлен
+            return cur.lastrowid, True
+
+        row = conn.execute(
+            "SELECT game_id FROM games WHERE chat_id = ? AND pgn = ?",
+            (chat_id, pgn)
+        ).fetchone()
+        return row["game_id"], False
 
 def load_games(chat_id: int):
     conn = get_connection()
@@ -68,10 +74,9 @@ def save_blunders(game_id: int, blunder_list: list[tuple[int, str]]):
     conn = get_connection()
     with conn:
         conn.executemany(
-            "INSERT INTO blunders(game_id, move_index, fen_before) VALUES(?,?,?)",
+            "INSERT OR IGNORE INTO blunders(game_id, move_index, fen_before) VALUES(?,?,?)",
             [(game_id, idx, fen) for idx, fen in blunder_list]
         )
-    conn.close()
 
 def load_blunders(chat_id: int):
     conn = get_connection()

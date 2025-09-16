@@ -10,10 +10,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS games (
   game_id      INTEGER PRIMARY KEY AUTOINCREMENT,
   chat_id      INTEGER       NOT NULL,
-  source       TEXT          NOT NULL,       -- lichess или chesscom
+  source       TEXT          NOT NULL,
   pgn          TEXT          NOT NULL,
   synced_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(chat_id) REFERENCES users(chat_id)
+  FOREIGN KEY(chat_id) REFERENCES users(chat_id),
+  UNIQUE(chat_id, pgn)
 );
 
 CREATE TABLE IF NOT EXISTS blunders (
@@ -22,5 +23,6 @@ CREATE TABLE IF NOT EXISTS blunders (
   move_index   INTEGER       NOT NULL,
   fen_before   TEXT          NOT NULL,
   detected_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(game_id) REFERENCES games(game_id)
+  FOREIGN KEY(game_id) REFERENCES games(game_id),
+  UNIQUE(game_id, move_index)
 );
