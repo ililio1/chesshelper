@@ -13,8 +13,14 @@ def get_connection():
 def init_db():
     conn = get_connection()
     with conn:
+        # Базовая схема
         with open("schema.sql", encoding="utf-8") as f:
             conn.executescript(f.read())
+        # Миграция: добавляем флаг solved в blunders, если ещё нет
+        cols = conn.execute("PRAGMA table_info(blunders)").fetchall()
+        col_names = {c[1] for c in cols}
+        if "solved" not in col_names:
+            conn.execute("ALTER TABLE blunders ADD COLUMN solved INTEGER NOT NULL DEFAULT 0")
     conn.close()
 
 def upsert_user(chat_id: int, lichess: str = None, chesscom: str = None):
@@ -42,7 +48,6 @@ def get_user_nicks(chat_id: int) -> tuple[str, str]:
     return row["lichess_nick"], row["chesscom_nick"]
 
 def save_game(chat_id: int, source: str, pgn: str) -> tuple[int, bool]:
-
     conn = get_connection()
     with conn:
         cur = conn.execute(
@@ -79,27 +84,60 @@ def save_blunders(game_id: int, blunder_list: list[tuple[int, str]]):
         )
 
 def load_blunders(chat_id: int):
+    """Старый интерфейс (без фильтрации по solved), оставляю на месте, если где-то ещё используется."""
     conn = get_connection()
     rows = conn.execute(
-        "SELECT b.blunder_id, b.move_index, b.fen_before, g.source "
+        "SELECT b.blunder_id, b.game_id, b.move_index, b.fen_before, b.solved, g.source "
         "FROM blunders b "
         "JOIN games g ON g.game_id = b.game_id "
         "WHERE g.chat_id = ? "
-        "ORDER BY b.detected_at DESC "
-        "LIMIT 20",
+        "ORDER BY b.detected_at DESC ",
         (chat_id,)
     ).fetchall()
     conn.close()
     return rows
+
+def load_unsolved_blunders(chat_id: int):
+    """Новые задачи — только нерешённые записи."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT b.blunder_id, b.game_id, b.move_index, b.fen_before, b.solved, g.source "
+        "FROM blunders b "
+        "JOIN games g ON g.game_id = b.game_id "
+        "WHERE g.chat_id = ? AND b.solved = 0 "
+        "ORDER BY b.detected_at DESC ",
+        (chat_id,)
+    ).fetchall()
+    conn.close()
+    return rows
+
+def mark_blunder_solved(blunder_id: int):
+    conn = get_connection()
+    with conn:
+        conn.execute(
+            "UPDATE blunders SET solved = 1 WHERE blunder_id = ?",
+            (blunder_id,)
+        )
 
 def get_fen_at_move(pgn: str, move_idx: int) -> str:
     pgn_io = io.StringIO(pgn)
     game = chess.pgn.read_game(pgn_io)
     if game is None:
         raise ValueError("Невалидный PGN")
-    board  = game.board()
+    board = game.board()
     for i, move in enumerate(game.mainline_moves()):
         if i == move_idx:
             return board.fen()
         board.push(move)
     return board.fen()
+
+def get_game_pgn(game_id: int) -> str | None:
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT pgn FROM games WHERE game_id = ?",
+        (game_id,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    return row["pgn"]

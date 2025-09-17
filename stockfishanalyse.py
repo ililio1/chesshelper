@@ -51,3 +51,10 @@ def findmove(evaluations):
             print(i)
 
     return blunders
+
+def stockfish_best_move(fen, time_limit = 0.1) -> chess.Move:
+    board = chess.Board(fen)
+
+    with chess.engine.SimpleEngine.popen_uci(ENGINE_PATH) as engine:
+        result = engine.play(board,chess.engine.Limit(time=time_limit))
+    return result.move

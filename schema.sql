@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS blunders (
   move_index   INTEGER       NOT NULL,
   fen_before   TEXT          NOT NULL,
   detected_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+  solved       INTEGER       NOT NULL DEFAULT 0,  -- << добавлено
   FOREIGN KEY(game_id) REFERENCES games(game_id),
   UNIQUE(game_id, move_index)
 );
