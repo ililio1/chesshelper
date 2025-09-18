@@ -1,4 +1,25 @@
 [Event "rated blitz game"]
+[Site "https://lichess.org/JU0yioav"]
+[Date "2025.09.18"]
+[White "ililio"]
+[Black "veda71"]
+[Result "0-1"]
+[GameId "JU0yioav"]
+[UTCDate "2025.09.18"]
+[UTCTime "06:24:49"]
+[WhiteElo "1472"]
+[BlackElo "1443"]
+[WhiteRatingDiff "-34"]
+[BlackRatingDiff "+6"]
+[Variant "Standard"]
+[TimeControl "180+2"]
+[ECO "C40"]
+[Termination "Normal"]
+
+1. e4 e5 2. Nf3 c6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 Bb4 6. Bd3 O-O 7. a3 Bc5 8. O-O Bxd4 0-1
+
+
+[Event "rated blitz game"]
 [Site "https://lichess.org/vs9RGubu"]
 [Date "2025.09.16"]
 [White "andi_candy"]
