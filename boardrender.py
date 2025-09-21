@@ -2,20 +2,39 @@ import os
 from PIL import Image, ImageDraw
 from io import BytesIO
 import chess
+from functools import lru_cache
 
+# Глобальная загрузка ассетов фигур
 _piece_images: dict[str, Image.Image] = {}
+
 def _load_piece_images():
     base = os.path.join(os.path.dirname(__file__), "assets", "pieces")
     for color in ("w", "b"):
-        for p in ("p","n","b","r","q","k"):
+        for p in ("p", "n", "b", "r", "q", "k"):
             name = f"{color}{p}"
-            _piece_images[name] = Image.open(
-                os.path.join(base, name + ".png")
-            ).convert("RGBA")
+            img_path = os.path.join(base, name + ".png")
+            icon = Image.open(img_path).convert("RGBA")
+            _piece_images[name] = icon
 
 _load_piece_images()
 
-def render_board_png(fen: str, square_size: int = 200, flip: bool = False) -> BytesIO:
+def _get_scaled_icon(key: str, square_size: int) -> Image.Image:
+    """Масштабирование и кеширование иконок под конкретный размер клетки."""
+    icon = _piece_images[key]
+    if icon.width == square_size and icon.height == square_size:
+        return icon
+    return icon.resize((square_size, square_size), Image.LANCZOS)
+
+@lru_cache(maxsize=128)
+def _render_board_image_cached(fen: str, square_size: int, flip: bool) -> bytes:
+    """Кэшированный PNG-растер позиции (байты PNG), чтобы ускорить повторные кадры."""
+    img = _render_board_image(fen, square_size, flip)
+    buf = BytesIO()
+    img.save(buf, "PNG")
+    return buf.getvalue()
+
+def _render_board_image(fen: str, square_size: int, flip: bool) -> Image.Image:
+    """Рендер PIL.Image без перекодирования."""
     board = chess.Board(fen)
     bs = square_size
     img = Image.new("RGBA", (8 * bs, 8 * bs), "#FFFFFF")
@@ -40,82 +59,83 @@ def render_board_png(fen: str, square_size: int = 200, flip: bool = False) -> By
             piece = board.piece_at(sq)
             if piece:
                 key = f"{'w' if piece.color else 'b'}{piece.symbol().lower()}"
-                icon = _piece_images[key]
-                # position to paste
-                img.paste(icon, (x0, y0), icon)
+                icon = _get_scaled_icon(key, bs)
+                img.alpha_composite(icon, (x0, y0))
 
-    buf = BytesIO()
+    return img
+
+def render_board_png(
+    fen: str,
+    square_size: int = 200,
+    flip: bool = False
+) -> BytesIO:
+    """Сохранение PNG в память (совместимость с текущим кодом бота)."""
+    png_bytes = _render_board_image_cached(fen, square_size, flip)
+    buf = BytesIO(png_bytes)
     buf.name = "board.png"
-    img.save(buf, "PNG")
     buf.seek(0)
     return buf
-
 
 def render_move_gif(
     fen_before: str,
     move: chess.Move,
     square_size: int = 200,
     flip: bool = False,
-    duration: int = 800
+    frame_duration: int = 800,
+    pause_after: int = 2000
 ) -> BytesIO:
     """
-    Создаёт двухкадровый GIF-анимацию:
-    - кадр 1: доска до хода
-    - кадр 2: доска после хода (move)
-    duration — задержка между кадрами в миллисекундах.
-    Возвращает BytesIO с именем 'move.gif'.
+    Двухкадровый GIF: второй кадр повторяется, чтобы создать паузу.
+    frame_duration — задержка каждого кадра в миллисекундах.
+    pause_after — желаемая длительность паузы на последнем кадре.
     """
-    # Кадр до хода
-    buf1 = render_board_png(fen_before, square_size, flip)
-    im1  = Image.open(buf1)
-
-    # Кадр после хода
+    # Кадры как PIL.Image, без лишних PNG-открытий
+    im1 = _render_board_image(fen_before, square_size, flip)
     board_after = chess.Board(fen_before)
     board_after.push(move)
-    buf2 = render_board_png(board_after.fen(), square_size, flip)
-    im2  = Image.open(buf2)
+    im2 = _render_board_image(board_after.fen(), square_size, flip)
 
-    # Сборка GIF
+    pause_copies = max(1, int(round(pause_after / frame_duration)))
+    frames = [im1, im2] + [im2] * pause_copies
+
     gif_buf = BytesIO()
     gif_buf.name = "move.gif"
-    im1.save(
+    frames[0].save(
         gif_buf,
         format="GIF",
         save_all=True,
-        append_images=[im2],
-        loop=0,             # зацикливать анимацию
-        duration=duration   # миллисекунд между кадрами
+        append_images=frames[1:],
+        loop=0,
+        duration=frame_duration,
+        disposal=2,
     )
     gif_buf.seek(0)
     return gif_buf
-
 
 def render_line_gif(
     fen_start: str,
     moves: list[chess.Move],
     square_size: int = 200,
     flip: bool = False,
-    duration: int = 600
+    frame_duration: int = 600,
+    pause_after: int = 2000
 ) -> BytesIO:
     """
-    Генерирует GIF-анимацию из серии полуходов:
-    - первый кадр: начальная позиция fen_start
-    - последующие кадры: после каждого хода из списка moves
-    duration — задержка между кадрами в миллисекундах.
-    Возвращает BytesIO с именем 'line.gif'.
+    GIF-анимация серии полуходов.
+    Первый кадр — стартовая позиция, затем каждый ход.
+    Последний кадр дублируется для создания паузы.
     """
     frames: list[Image.Image] = []
     board = chess.Board(fen_start)
 
-    # Кадр с начальной позицией
-    frames.append(Image.open(render_board_png(fen_start, square_size, flip)))
-
-    # Кадры после каждого полухода
+    frames.append(_render_board_image(fen_start, square_size, flip))
     for mv in moves:
         board.push(mv)
-        frames.append(Image.open(render_board_png(board.fen(), square_size, flip)))
+        frames.append(_render_board_image(board.fen(), square_size, flip))
 
-    # Сборка GIF
+    pause_copies = max(1, int(round(pause_after / frame_duration)))
+    frames += [frames[-1]] * pause_copies
+
     gif_buf = BytesIO()
     gif_buf.name = "line.gif"
     frames[0].save(
@@ -124,8 +144,8 @@ def render_line_gif(
         save_all=True,
         append_images=frames[1:],
         loop=0,
-        duration=duration
+        duration=frame_duration,
+        disposal=2,
     )
     gif_buf.seek(0)
     return gif_buf
-

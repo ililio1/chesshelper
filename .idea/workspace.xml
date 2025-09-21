@@ -6,22 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="a557d2d3-fc77-4a0c-a2e0-c699de6fd4c9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/bb.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/bb.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/bk.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/bk.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/bn.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/bn.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/bp.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/bp.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/bq.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/bq.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/br.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/br.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wb.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wb.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wk.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wk.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wn.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wn.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wp.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wp.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wq.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wq.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/pieces/wr.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pieces/wr.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/boardrender.py" beforeDir="false" afterPath="$PROJECT_DIR$/boardrender.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bot.db" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chessdata/lichess/ililio.pgn" beforeDir="false" afterPath="$PROJECT_DIR$/chessdata/lichess/ililio.pgn" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/schema.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/stockfishanalyse.py" beforeDir="false" afterPath="$PROJECT_DIR$/stockfishanalyse.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,19 +51,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.boardrender.executor&quot;: &quot;Run&quot;,
-    &quot;Python.bot.executor&quot;: &quot;Run&quot;,
-    &quot;Python.connection.executor&quot;: &quot;Run&quot;,
-    &quot;Python.loadgames.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stockfishanalyse.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/ChessHelper&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.boardrender.executor": "Run",
+    "Python.bot.executor": "Run",
+    "Python.connection.executor": "Run",
+    "Python.loadgames.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.stockfishanalyse.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/ChessHelper"
   }
-}</component>
+}]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

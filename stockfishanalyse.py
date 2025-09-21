@@ -58,3 +58,16 @@ def stockfish_best_move(fen, time_limit = 0.1) -> chess.Move:
     with chess.engine.SimpleEngine.popen_uci(ENGINE_PATH) as engine:
         result = engine.play(board,chess.engine.Limit(time=time_limit))
     return result.move
+
+def evaluate_move(fen: str, move: chess.Move, depth: int = 15) -> int:
+
+    board = chess.Board(fen)
+    board.push(move)
+    with chess.engine.SimpleEngine.popen_uci(ENGINE_PATH) as engine:
+        info = engine.analyse(
+            board,
+            limit=chess.engine.Limit(depth=depth),
+            info=chess.engine.INFO_SCORE
+        )
+    score = info["score"].pov(board.turn).score(mate_score=100000)
+    return score if score is not None else 0
