@@ -53,18 +53,14 @@ dp = Dispatcher()
 
 init_db()
 
-# Константы для параллелизма
 MAX_CONCURRENT_GAMES = 3
 MAX_CONCURRENT_BLUNDERS = 4
 
-# Пул потоков для фонового рендеринга GIF
 RENDER_EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
 pending_binding: dict[int, str] = {}
 
-# ------------------------------------
-# Клавиатуры с эмодзи
-# ------------------------------------
+
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="👤 Профиль"), KeyboardButton(text="🔍 Анализ игр")],
@@ -93,7 +89,6 @@ class ErrorsSG(StatesGroup):
     WAIT_ANSWER = State()
     WAIT_FIX = State()
 
-# ----------------- Async-обёртки движка -----------------
 async def _engine_best_move_async(fen: str) -> Optional[chess.Move]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, stockfish_best_move, fen)
@@ -110,26 +105,31 @@ async def _engine_findmove_async(evals: list[int]) -> list[int]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, findmove, evals)
 
-# ----------------- Проверка ников -----------------
 async def lichess_user_exists(nick: str) -> bool:
     if not nick:
         return False
     url = f"https://lichess.org/api/user/{nick}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            return resp.status == 200
+    loop = asyncio.get_running_loop()
+    try:
+        # run blocking requests.get in executor to avoid blocking event loop
+        resp = await loop.run_in_executor(None, partial(requests.get, url, timeout=5))
+        return resp.status_code == 200
+    except Exception:
+        return False
 
 async def chesscom_user_exists(nick: str) -> bool:
     if not nick:
         return False
     url = f"https://api.chess.com/pub/player/{nick.lower()}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            return resp.status == 200
+    loop = asyncio.get_running_loop()
+    try:
+        resp = await loop.run_in_executor(None, partial(requests.get, url, timeout=5))
+        return resp.status_code == 200
+    except Exception:
+        return False
 
-# ----------------- Вспомогательные функции -----------------
 def _pretty_source_name(source: str) -> str:
-    return "chess.com" if source == "chesscom" else "lichess"
+    return "chesscom" if source == "chesscom" else "lichess"
 
 def _get_move_from_pgn(pgn: str, move_idx: int) -> Optional[chess.Move]:
     game = chess.pgn.read_game(io.StringIO(pgn))
@@ -169,7 +169,6 @@ async def _best_line_by_iterating(fen: str, plies: int = 6) -> list[chess.Move]:
         board.push(mv)
     return line
 
-# --------------- Фоновый рендер GIF ----------------
 def _render_all_gifs_sync(
     blunder_id: int,
     fen_before: str,
@@ -233,7 +232,6 @@ async def _render_and_save_gifs_async(
         cont_line,
     )
 
-# --------------- Параллельный анализ партий и blunders ----------------
 async def process_blunder(
     game_id: int,
     idx: int,
@@ -348,7 +346,6 @@ async def auto_sync_loop():
                 pass
         await asyncio.sleep(8 * 3600)
 
-# -------------------- Хендлеры Telegram --------------------
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
     await message.answer(
@@ -396,12 +393,31 @@ async def on_bind_lichess(message: Message):
 
 @dp.message(lambda m: m.chat.id in pending_binding and pending_binding[m.chat.id] == "lichess")
 async def bind_lichess(m: Message):
-    nick = (m.text or "").strip()
+    text = (m.text or "").strip()
+    # отмена при нажатии "Назад"
+    if text == "🏠 Назад":
+        pending_binding.pop(m.chat.id, None)
+        l, c = get_user_nicks(m.chat.id)
+        await m.answer(
+            f"👤 Твой профиль:\n"
+            f"• ID: {m.chat.id}\n"
+            f"• Lichess: {l or 'не привязан'}\n"
+            f"• Chesscom: {c or 'не привязан'}",
+            reply_markup=profile_kb,
+        )
+        return
+
+    nick = text
     if not await lichess_user_exists(nick):
-        return await m.answer("❌ Lichess не найден. Попробуй снова.", reply_markup=profile_kb)
+        # оставляем пользователь в профиле, отменяем привязку
+        pending_binding.pop(m.chat.id, None)
+        await m.answer("❌ Lichess не найден. Привязка отменена.", reply_markup=profile_kb)
+        return
+
     upsert_user(m.chat.id, lichess=nick)
     pending_binding.pop(m.chat.id, None)
     await m.answer(f"✅ Lichess привязан: `{nick}`", reply_markup=profile_kb)
+
 
 @dp.message(F.text == "🔗 Привязать Chesscom")
 async def on_bind_chesscom(message: Message):
@@ -410,12 +426,30 @@ async def on_bind_chesscom(message: Message):
 
 @dp.message(lambda m: m.chat.id in pending_binding and pending_binding[m.chat.id] == "chesscom")
 async def bind_chesscom(m: Message):
-    nick = (m.text or "").strip()
+    text = (m.text or "").strip()
+    # отмена при нажатии "Назад"
+    if text == "🏠 Назад":
+        pending_binding.pop(m.chat.id, None)
+        l, c = get_user_nicks(m.chat.id)
+        await m.answer(
+            f"👤 Твой профиль:\n"
+            f"• ID: {m.chat.id}\n"
+            f"• Lichess: {l or 'не привязан'}\n"
+            f"• Chesscom: {c or 'не привязан'}",
+            reply_markup=profile_kb,
+        )
+        return
+
+    nick = text
     if not await chesscom_user_exists(nick):
-        return await m.answer("❌ Chesscom не найден. Попробуй снова.", reply_markup=profile_kb)
+        pending_binding.pop(m.chat.id, None)
+        await m.answer("❌ Chesscom не найден. Привязка отменена.", reply_markup=profile_kb)
+        return
+
     upsert_user(m.chat.id, chesscom=nick)
     pending_binding.pop(m.chat.id, None)
     await m.answer(f"✅ Chesscom привязан: `{nick}`", reply_markup=profile_kb)
+
 
 @dp.message(F.text == "🔄 Синхронизировать")
 async def sync_games(m: Message):
@@ -520,7 +554,6 @@ async def _send_error_card(bot: Bot, chat_id: int, err: dict):
     ])
     await bot.send_document(chat_id, document=file_obj, caption=caption, reply_markup=kb)
 
-# -------- Callback-хендлеры --------
 @dp.callback_query(F.data == "back_to_main")
 async def on_back_to_main(query: CallbackQuery, state: FSMContext):
     await query.answer()
@@ -604,7 +637,6 @@ async def on_next_task(query: CallbackQuery, state: FSMContext):
     await state.update_data(current_idx=nxt)
     await _send_error_card(bot, query.message.chat.id, errors[nxt])
 
-# --------- Текстовые ответы ---------
 @dp.message(ErrorsSG.WAIT_ANSWER)
 async def process_user_attempt(message: Message, state: FSMContext):
     txt = (message.text or "").strip()
@@ -695,7 +727,6 @@ async def process_fix_input(message: Message, state: FSMContext):
 
     return await message.answer(f"❌ Уступаешь на {diff} ц.п. Попробуй снова или «📌 Решение».")
 
-# --------- Глобальная «Назад» и fallback ---------
 @dp.message(F.text == "🏠 Назад")
 async def go_back(message: Message, state: FSMContext):
     await state.clear()
@@ -705,7 +736,6 @@ async def go_back(message: Message, state: FSMContext):
 async def fallback(message: Message):
     await message.answer("🤔 Не понял. Используй меню ниже ⬇️", reply_markup=main_kb)
 
-# ----------------- Запуск -----------------
 async def main():
     asyncio.create_task(auto_sync_loop())
     await dp.start_polling(bot)

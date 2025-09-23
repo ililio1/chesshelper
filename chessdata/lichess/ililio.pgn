@@ -1,3 +1,45 @@
+[Event "rated rapid game"]
+[Site "https://lichess.org/DEbEpNDV"]
+[Date "2025.09.22"]
+[White "YazanAd"]
+[Black "ililio"]
+[Result "1/2-1/2"]
+[GameId "DEbEpNDV"]
+[UTCDate "2025.09.22"]
+[UTCTime "12:39:26"]
+[WhiteElo "1701"]
+[BlackElo "1767"]
+[WhiteRatingDiff "+1"]
+[BlackRatingDiff "-6"]
+[Variant "Standard"]
+[TimeControl "600+0"]
+[ECO "C52"]
+[Termination "Normal"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4 Bxb4 5. c3 Ba5 6. d4 exd4 7. O-O Nge7 8. cxd4 O-O 9. Bd2 d6 10. d5 Bxd2 11. dxc6 Nxc6 12. Nbxd2 Bg4 13. Qb3 Na5 14. Qc3 Nxc4 15. Qxc4 Re8 16. Rfe1 c6 17. h3 Be6 18. Qb4 Qc7 19. Rac1 a5 20. Qa3 Qe7 21. Nb3 a4 22. Nbd4 c5 23. Nf5 Bxf5 24. exf5 Qc7 25. Rxe8+ Rxe8 26. Qxa4 b5 27. Qxb5 Rb8 28. Qc4 Ra8 29. Re1 h6 30. Nd4 Qd7 31. Nb5 Ra5 32. a4 d5 33. Rd1 dxc4 34. Rxd7 Rxa4 35. Rc7 c3 36. Rxc5 Ra5 37. Rc8+ Kh7 38. Nxc3 Rxf5 39. Ne4 Re5 40. Nd6 f6 41. Nf7 Re1+ 42. Kh2 Kg6 43. Nd6 Rd1 44. Ne4 Rd4 45. f3 Kh7 46. Kg3 h5 47. Rc6 Kh6 48. Kf4 Rd5 49. g4 hxg4 50. fxg4 Re5 51. h4 Kg6 52. h5+ Kh6 53. Ng3 Kh7 54. Ne4 Rb5 55. g5 fxg5+ 56. Nxg5+ Kh8 57. Nf7+ Kg8 58. Nd6 Rb4+ 59. Kf5 Ra4 60. Kg6 Ra8 61. Nf7 Rf8 62. h6 gxh6 63. Nxh6+ Kh8 64. Rf6 Rxf6+ 65. Kxf6 1/2-1/2
+
+
+[Event "rated blitz game"]
+[Site "https://lichess.org/yhRPa0ET"]
+[Date "2025.09.21"]
+[White "ililio"]
+[Black "Drtrump"]
+[Result "0-1"]
+[GameId "yhRPa0ET"]
+[UTCDate "2025.09.21"]
+[UTCTime "17:48:11"]
+[WhiteElo "1438"]
+[BlackElo "1442"]
+[WhiteRatingDiff "-29"]
+[BlackRatingDiff "+13"]
+[Variant "Standard"]
+[TimeControl "180+2"]
+[ECO "B10"]
+[Termination "Normal"]
+
+1. e4 c6 2. Nf3 d5 3. exd5 cxd5 4. d4 Nf6 5. Bf4 Nc6 6. Nc3 Bg4 7. h3 Bh5 8. Bb5 e6 9. a3 Bd6 10. Bxd6 Qxd6 11. g4 Bg6 12. Ne5 O-O 13. Nxg6 fxg6 14. Qd2 a6 15. Bd3 Nxd4 16. Bxg6 Nf3+ 0-1
+
+
 [Event "rated blitz game"]
 [Site "https://lichess.org/JU0yioav"]
 [Date "2025.09.18"]
@@ -17,26 +59,5 @@
 [Termination "Normal"]
 
 1. e4 e5 2. Nf3 c6 3. d4 exd4 4. Nxd4 Nf6 5. Nc3 Bb4 6. Bd3 O-O 7. a3 Bc5 8. O-O Bxd4 0-1
-
-
-[Event "rated blitz game"]
-[Site "https://lichess.org/vs9RGubu"]
-[Date "2025.09.16"]
-[White "andi_candy"]
-[Black "ililio"]
-[Result "1-0"]
-[GameId "vs9RGubu"]
-[UTCDate "2025.09.16"]
-[UTCTime "06:39:48"]
-[WhiteElo "1515"]
-[BlackElo "1505"]
-[WhiteRatingDiff "+7"]
-[BlackRatingDiff "-33"]
-[Variant "Standard"]
-[TimeControl "180+2"]
-[ECO "D00"]
-[Termination "Normal"]
-
-1. d4 d5 2. Bf4 Bf5 3. Nf3 Nf6 4. h3 e6 5. Nh4 Bg6 6. Nxg6 hxg6 7. e3 Bd6 8. Bxd6 Qxd6 9. Nc3 Nc6 10. Qd2 O-O-O 11. O-O-O Rhe8 12. f3 e5 13. dxe5 Nxe5 14. Bb5 c6 15. Be2 Kb8 16. e4 Re7 17. exd5 Nxd5 18. Ne4 Qc7 19. Qg5 f6 20. Qh4 Qa5 21. Kb1 Qb4 22. c3 Nxc3+ 23. Nxc3 Qxh4 24. Rxd8+ Kc7 25. Rd2 Nc4 26. Rc2 Ne5 27. Nd5+ Kd6 28. Nxe7 Kxe7 29. Rd1 Qf2 30. g4 Qg3 31. Rd4 Qxh3 32. f4 Nxg4 33. Re4+ Kf7 34. Bc4+ Kf8 35. Rce2 Qh1+ 36. Re1 Qh2 37. Re8# 1-0
 
 
