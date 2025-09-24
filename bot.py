@@ -46,7 +46,7 @@ from connection import (
 )
 
 logging.basicConfig(level=logging.INFO)
-BOT_TOKEN = "8449137700:AAEaGnBplBuYKlBcoQtn-TltQJ5dZomDxNk"
+BOT_TOKEN = ""
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -109,24 +109,18 @@ async def lichess_user_exists(nick: str) -> bool:
     if not nick:
         return False
     url = f"https://lichess.org/api/user/{nick}"
-    loop = asyncio.get_running_loop()
-    try:
-        # run blocking requests.get in executor to avoid blocking event loop
-        resp = await loop.run_in_executor(None, partial(requests.get, url, timeout=5))
-        return resp.status_code == 200
-    except Exception:
-        return False
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return resp.status == 200
+
 
 async def chesscom_user_exists(nick: str) -> bool:
     if not nick:
         return False
     url = f"https://api.chess.com/pub/player/{nick.lower()}"
-    loop = asyncio.get_running_loop()
-    try:
-        resp = await loop.run_in_executor(None, partial(requests.get, url, timeout=5))
-        return resp.status_code == 200
-    except Exception:
-        return False
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return resp.status == 200
 
 def _pretty_source_name(source: str) -> str:
     return "chesscom" if source == "chesscom" else "lichess"
