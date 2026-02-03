@@ -2,8 +2,19 @@ import chess
 import chess.engine
 import chess.pgn
 import io
+import os
+import sys
 
-ENGINE_PATH = "D:\\ChessHelper\\stockfish\\stockfish-windows-x86-64-avx2.exe"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Если запускаем на Windows (локально) - ищем exe, если на Linux (сервер) - ищем бинарник без расширения
+if sys.platform == "win32":
+    ENGINE_BINARY = "stockfish-windows-x86-64-avx2.exe"
+else:
+    # Имя файла, который мы зальем на сервер (об этом ниже)
+    ENGINE_BINARY = "stockfish_linux_x64"
+
+ENGINE_PATH = os.path.join(BASE_DIR, "stockfish", ENGINE_BINARY)
 
 def geteval(strgame):
 

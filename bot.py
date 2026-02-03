@@ -21,7 +21,9 @@ from aiogram.fsm.state import State, StatesGroup
 
 import chess
 import chess.pgn
-
+import os
+import sys
+from dotenv import load_dotenv
 from boardrender import render_board_png, render_move_gif, render_line_gif
 from loadgames import getlastlichessgames, getlastchesscomgames
 from stockfishanalyse import (
@@ -46,7 +48,14 @@ from connection import (
 )
 
 logging.basicConfig(level=logging.INFO)
-BOT_TOKEN = ""
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+if not BOT_TOKEN:
+    print("Error: BOT_TOKEN is not set in .env or environment variables")
+    sys.exit(1)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -93,7 +102,7 @@ async def _engine_best_move_async(fen: str) -> Optional[chess.Move]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, stockfish_best_move, fen)
 
-async def _engine_evaluate_move_async(fen: str, move: chess.Move, depth: int = 15) -> int:
+async def _engine_evaluate_move_async(fen: str, move: chess.Move, depth: int = 12) -> int:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, evaluate_move, fen, move, depth)
 
