@@ -64,21 +64,52 @@ def render_board_png(
     buf.seek(0)
     return buf
 
+
+import random
+from PIL import Image, ImageDraw
+
+
+def _render_board_with_indicator(fen: str, square_size: int, flip: bool, progress: float) -> Image.Image:
+    """Рисует доску и добавляет маленькую полоску прогресса внизу (1 пиксель высотой)."""
+    img = _render_board_image(fen, square_size, flip)
+    draw = ImageDraw.Draw(img)
+
+    # Рисуем тонкую полоску в самом низу, которая меняет длину
+    # Это создает значительное изменение в данных кадра для видеокодека
+    width = img.width
+    height = img.height
+    indicator_width = int(width * progress)
+
+    # Рисуем линию цветом, который почти совпадает с клеткой, но технически другой
+    draw.line([(0, height - 1), (indicator_width, height - 1)], fill=(181, 136, 99, 255), width=1)
+    return img
+
+
 def render_move_gif(
-    fen_before: str,
-    move: chess.Move,
-    square_size: int = 200,
-    flip: bool = False,
-    frame_duration: int = 800,
-    pause_after: int = 2000
+        fen_before: str,
+        move: chess.Move,
+        square_size: int = 200,
+        flip: bool = False,
+        frame_duration: int = 250,  # Уменьшаем длительность одного кадра
+        pause_after: int = 2000
 ) -> BytesIO:
-    im1 = _render_board_image(fen_before, square_size, flip)
+    # Генерируем много кадров, чтобы видео длилось ~3 секунды
+    # Даже для одного хода мы сделаем "анимацию"
+    frames = []
+
+    # 4 кадра для начальной позиции (прогресс-бар движется)
+    for i in range(4):
+        frames.append(_render_board_with_indicator(fen_before, square_size, flip, i / 20))
+
+    # Позиция после хода
     board_after = chess.Board(fen_before)
     board_after.push(move)
-    im2 = _render_board_image(board_after.fen(), square_size, flip)
+    fen_after = board_after.fen()
 
-    pause_copies = max(1, int(round(pause_after / frame_duration)))
-    frames = [im1, im2] + [im2] * pause_copies
+    # 8 кадров финальной позиции (полоска доходит до конца)
+    # Это создаст "движение", которое Telegram не сможет проигнорировать
+    for i in range(5, 15):
+        frames.append(_render_board_with_indicator(fen_after, square_size, flip, i / 15))
 
     gif_buf = BytesIO()
     gif_buf.name = "move.gif"
@@ -88,31 +119,41 @@ def render_move_gif(
         save_all=True,
         append_images=frames[1:],
         loop=0,
-        duration=frame_duration,
+        duration=150,  # Константный и быстрый FPS (около 7 кадров в сек)
         disposal=2,
     )
     gif_buf.seek(0)
     return gif_buf
 
+
 def render_line_gif(
-    fen_start: str,
-    moves: list[chess.Move],
-    square_size: int = 200,
-    flip: bool = False,
-    frame_duration: int = 600,
-    pause_after: int = 2000
+        fen_start: str,
+        moves: list[chess.Move],
+        square_size: int = 200,
+        flip: bool = False,
+        frame_duration: int = 400,
+        pause_after: int = 2000
 ) -> BytesIO:
-
-    frames: list[Image.Image] = []
     board = chess.Board(fen_start)
-
-    frames.append(_render_board_image(fen_start, square_size, flip))
+    all_fens = [fen_start]
     for mv in moves:
         board.push(mv)
-        frames.append(_render_board_image(board.fen(), square_size, flip))
+        all_fens.append(board.fen())
 
-    pause_copies = max(1, int(round(pause_after / frame_duration)))
-    frames += [frames[-1]] * pause_copies
+    frames = []
+    total_steps = len(all_fens) + 10  # Запас для паузы
+
+    # Для каждого FEN делаем 2 кадра с разным прогресс-баром
+    for idx, fen in enumerate(all_fens):
+        progress = (idx + 1) / total_steps
+        frames.append(_render_board_with_indicator(fen, square_size, flip, progress))
+        frames.append(_render_board_with_indicator(fen, square_size, flip, progress + 0.01))
+
+    # Пауза в конце: делаем 10 уникальных кадров (полоска чуть-чуть дрожит)
+    last_fen = all_fens[-1]
+    for i in range(10):
+        v = 0.9 + (i * 0.01)
+        frames.append(_render_board_with_indicator(last_fen, square_size, flip, min(v, 1.0)))
 
     gif_buf = BytesIO()
     gif_buf.name = "line.gif"
@@ -122,7 +163,7 @@ def render_line_gif(
         save_all=True,
         append_images=frames[1:],
         loop=0,
-        duration=frame_duration,
+        duration=200,
         disposal=2,
     )
     gif_buf.seek(0)
